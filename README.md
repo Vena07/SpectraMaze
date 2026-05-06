@@ -1,47 +1,96 @@
-# SpectraMaze (Laser puzzle game)
+# 🌌 SpectraMaze
 
-Logická 2D hra v Pythonu (Pygame), kde je cílem dostat barevné laserové paprsky ze zdrojových krystalů do cílových žárovek. Hra striktně využívá mechaniku aditivního míchání barev (RGB) a je propojená s webovou platformou pro komunitní tvorbu map.
+**Logická 2D sci-fi hra v Pythonu (Pygame)**, kde je cílem dostat barevné laserové paprsky ze zdrojových krystalů do cílových žárovek. Hra striktně využívá mechaniku **aditivního míchání barev (RGB)** a je propojená s webovou platformou pro komunitní tvorbu map. Hra se odehrává v pohlcující atmosféře hlubokého vesmíru.
 
-**Čtvrtletní projekt - OOP**
+🏆 *Vytvořeno jako čtvrtletní maturitní/školní projekt zaměřený na Objektově orientované programování (OOP).*
 
-## Náplň hry a propojení s webem
-Hra se odehrává na čtvercovém herním poli (gridu). Hráč manipuluje s bloky, aby správně nasměroval a obarvil paprsek. 
+---
 
-**Webová platforma:** Zásadní součástí projektu je web, kde uživatelé mohou tvořit vlastní mapy. Tyto mapy si hra stahuje, a funguje zde tabulka hodnocení (Leaderboards), kdo danou mapu vyřešil nejrychleji.
+## ✨ Hlavní funkce
 
-## Splnění požadavků zadání
-* **Kompletní OOP:** Všechny bloky z nákresu dědí ze základní třídy `BaseBlock` a využívají polymorfismus při průchodu paprsku.
-* **5 druhů nepřátel (Herní překážky):** V naší logické hře funguje jako "nepřítel" 5 hlavních překážkových bloků, které komplikují cestu:
-  1. **Zrcadlo** (Odráží paprsek o 90°)
-  2. **Míchačka** (Vynucuje spojení barev dle RGB logiky)
-  3. **Dveře** (Blokují průchod, dokud není stisknuto tlačítko)
-  4. **Switch barev** (Mění barvu procházejícího paprsku)
-  5. **Rozdvojník** (Rozděluje paprsek do dvou směrů)
-* **Skiny (2 varianty):** GUI a herní pole podporuje změnu vzhledu (např. tmavý/světlý režim), která se dá přepnout v Options menu.
-* **Menu:** Obsahuje plně funkční Start menu a Pauza menu (Play, Restart, Options, Quit, výběr jazyka).
-* **Levely:** Hra obsahuje komplexní úrovně, které vyžadují logické řetězení bloků.
+* 🌐 **Propojení s Webovou Platformou:** Uživatelé tvoří vlastní mapy v externím webovém editoru. Mapy jsou ukládány jako kompaktní JSON přes API přímo do online databáze a stahují se plynule rovnou do hry.
+* 🤖 **Procedurální AI Generátor:** Neomezený počet logických hádanek! Hra obsahuje algoritmus, který umí generovat smysluplné, zaručeně řešitelné mapy ve 3 úrovních obtížnosti.
+* 🎵 **Vlastní Audio Syntezátor:** Žádné předem nahrané audio samply pro herní bloky. Hra si v reálném čase matematicky generuje sci-fi zvukové vlny (sine, saw, square, noise) pomocí upraveného pitch-bend enginu.
+* 🪐 **Moderní Vizuál & Glassmorphism:** Animované paralaxní hvězdné nebe s mlhovinou, pulzující neonové prvky a vizuální "skleněné" efekty herního pole.
 
-## Kompletní seznam herních bloků
-Ve hře se vyskytují přesně tyto bloky (rozměr 200x200 px):
-* **Krystal:** Start paprsku (vysílá R, G nebo B).
-* **Žárovka:** Cíl paprsku (vyžaduje specifickou barvu).
-* **Zrcadlo:** Odražení paprsku.
-* **Míchačka:** Spojení barev.
-* **Průchozí blok:** Průchod pro oba paprsky bez smíchání.
-* **Dveře:** Otevřou se až po spuštění tlačítka.
-* **Tlačítko:** Tlačítko pro otevření dveří.
-* **Switch barev:** Blok s možností změnit barvu paprsku.
-* **Rozdvojník:** Rozdělení paprsku do dvou.
+---
 
-## Logika spojení barev (RGB)
-Hra využívá reálný model míchání světla:
-* Červená + Zelená = Žlutá
-* Červená + Modrá = Magenta
-* Zelená + Modrá = Cyan (Azurová)
-* Červená + Zelená + Modrá = Bílá
+## 🧩 Architektura a OOP zadání
 
-## Architektura a OOP
-Aplikace je zkompilovaná do `.exe` souboru. Kód je rozdělen na:
-* `LevelManager` (stahování map z webu a správa gridu)
-* `LaserEngine` (výpočet RGB logiky a tras paprsků)
-* `GUI_Manager` (správa Start/Pauza menu a herního pole)
+Projekt je od základů striktně a **kompletně objektově orientovaný**. Každý herní blok je definován vlastní třídou, sdílí společného předka `BaseBlock` a pomocí **polymorfismu** definuje unikátní způsob interakce s běžícím laserovým paprskem.
+
+V rámci specifikace "Nepřátelé" figuruje ve hře **5 stěžejních logických překážek**, které hráči kříží cestu:
+1. **Zrcadlo (Mirror):** Odráží paprsek striktně o 90°.
+2. **Mixér (Mixer):** Neúprosně vynucuje spojení paprsků do nových barev.
+3. **Rozdvojník (Splitter):** Tříští energii do více směrů a narušuje plynulý tok.
+4. **Dveře (Door):** Ocelová překážka, kterou nelze zdolat bez nalezení aktivačního tlačítka.
+5. **Měnič (Color Switch):** Zákeřně přebarvuje už správně namíchaný paprsek.
+
+### Kompletní arzenál (Bloky):
+* 💎 **Krystal:** Zdroj světla, střílí primární paprsky (R, G, B).
+* 💡 **Žárovka:** Koncový cíl, který vyžaduje přesně specifikovanou barvu energie.
+* 🪞 **Zrcadlo:** Odráží paprsky.
+* 🎛️ **Mixér:** Kombinuje 2 paprsky do jedné barvy.
+* 🔀 **Rozdvojník:** Rozštěpí 1 paprsek na 2 nezávislé.
+* 🔄 **Měnič barev:** Přebarví průchozí paprsek na svou barvu.
+* ❌ **Křižovatka:** Bezpečný překryv tras bez exploze.
+* 🚪 **Dveře** & 🔘 **Tlačítko:** Logické spínače pro uvolnění cesty.
+* 🌀 **Teleport:** Cestování prostorem ve zlomku sekundy.
+
+---
+
+## 🎨 Logika míchání barev (RGB)
+Hra simuluje skutečné optické chování aditivního míchání světla. Abyste dokázali vyřešit ty nejtěžší úrovně, budete muset využít skládání spektra:
+
+* 🔴 Červená + 🟢 Zelená = 🟡 **Žlutá**
+* 🔴 Červená + 🔵 Modrá = 🟣 **Magenta**
+* 🟢 Zelená + 🔵 Modrá = 🩵 **Azurová (Cyan)**
+* 🔴 + 🟢 + 🔵 = ⚪ **Bílá**
+
+---
+
+## ⚙️ Instalace a Spuštění
+
+1. **Naklonujte si repozitář**
+```bash
+git clone https://github.com/vasin/SpectraMaze.git
+cd SpectraMaze
+```
+
+2. **Nainstalujte závislosti** (K běhu je zapotřebí knihovna `pygame` a `requests`)
+```bash
+pip install pygame requests
+```
+
+3. **Spusťte hru**
+```bash
+python main.py
+```
+
+---
+
+## 📁 Struktura složek projektu
+
+```text
+SpectraMaze/
+│
+├── main.py                # Jádro, herní smyčka, synth engine a částicové efekty
+├── engine.py              # Logika výpočtu letu laseru a detekce kolizí
+├── ui.py                  # Pokročilý UI systém, Glassmorphism menu, animace náhledů
+├── level_manager.py       # Komunikace s webovým API, stahování JSON a procedurální generátor
+│
+├── blocks/                # Třídy všech herních bloků
+│   ├── __init__.py
+│   ├── base_block.py      # OOP: Společný předek
+│   ├── crystal.py
+│   ├── bulb.py
+│   ├── mirror.py
+│   ├── mixer.py
+│   ├── crossover.py
+│   ├── door.py
+│   ├── button.py
+│   ├── color_switch.py
+│   ├── teleporter.py
+│   └── splitter.py
+│
+└── sound/                 # Podkladový soundtrack (pokud je k dispozici)
