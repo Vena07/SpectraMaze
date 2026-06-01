@@ -319,10 +319,10 @@ def main():
         # --- ANIMOVANÉ POZADÍ CELÉ HRY (VESMÍR) ---
         time_ms = pygame.time.get_ticks()
         
-        # Jemný mlhovinový efekt (ambientní záře v pozadí)
-        nebula_pulse = (math.sin(time_ms * 0.0005) + 1) / 2.0
-        pygame.draw.circle(screen, (20, 10, 40), (screen_w // 4, screen_h // 3), int(300 + nebula_pulse * 50))
-        pygame.draw.circle(screen, (10, 20, 40), (screen_w * 3 // 4, screen_h * 2 // 3), int(400 - nebula_pulse * 50))
+        # Jemný mlhovinový efekt (ambientní záře v pozadí) - elegantnější verze
+        nebula_pulse = (math.sin(time_ms * 0.0003) + 1) / 2.0  # Pomalejší pulz
+        pygame.draw.circle(screen, (15, 10, 35), (screen_w // 4, screen_h // 3), int(280 + nebula_pulse * 40))  # Softnější
+        pygame.draw.circle(screen, (10, 15, 35), (screen_w * 3 // 4, screen_h * 2 // 3), int(380 - nebula_pulse * 40))  # Softnější
         
         for i in range(200):
             layer = (i % 3) + 1 # 3 vrstvy pro paralaxní 3D efekt
@@ -331,10 +331,10 @@ def main():
             py = (screen_h - ((i * 251 + time_ms * speed) % screen_h)) % screen_h
             size = layer if i % 2 == 0 else layer - 1
             
-            # Zbarvení hvězd (modré, fialové, čistě bílé)
-            if i % 5 == 0: color = (150, 200, 255)
-            elif i % 4 == 0: color = (255, 180, 255)
-            else: color = (255, 255, 255)
+            # Zbarvení hvězd (modré, fialové, čistě bílé - softnější)
+            if i % 5 == 0: color = (120, 170, 220)  # Softnější cyan
+            elif i % 4 == 0: color = (200, 140, 220)  # Softnější magenta
+            else: color = (200, 200, 200)  # Softnější bílá
             
             brightness = int((math.sin(time_ms * 0.002 + i) + 1) * 80) + 40
             f_color = (min(255, int(color[0] * brightness / 255)), 

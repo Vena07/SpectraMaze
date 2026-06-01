@@ -1,4 +1,5 @@
 import pygame
+import math
 
 class BaseBlock:
     def __init__(self, x, y, size=100):
@@ -20,7 +21,13 @@ class BaseBlock:
     def interact_with_beam(self, beam_dir, color):
         # Standardně blok paprsek pohltí
         return None
-        
+
+    def get_breathing_pulse(self, cycle_time=3000, intensity=0.1):
+        """Vrací subtle breathing pulse (0 to intensity) pro elegantní animace"""
+        time_ms = pygame.time.get_ticks()
+        pulse = (math.sin(time_ms / cycle_time * 2 * math.pi) + 1) / 2.0  # 0-1 range
+        return pulse * intensity
+
     def on_click(self):
         # Zástupná metoda pro interakci myší
         pass

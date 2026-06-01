@@ -22,28 +22,29 @@ class Teleporter(BaseBlock):
     def draw_overlay(self, surface):
         center = self.rect.center
         time_ms = pygame.time.get_ticks()
-        
+
         # Rotující magický portálový efekt
         angle = time_ms * 0.002
         radius1 = self.size // 3 - 2
         radius2 = self.size // 4 - 2
-        
+
         # Vnější rotující prstenec
         pygame.draw.circle(surface, (150, 0, 255), center, radius1, 3)
         x1 = center[0] + math.cos(angle) * radius1
         y1 = center[1] + math.sin(angle) * radius1
         pygame.draw.circle(surface, (200, 100, 255), (int(x1), int(y1)), 6)
-        
+
         # Vnitřní prstenec (rotuje na druhou stranu)
         pygame.draw.circle(surface, (100, 0, 255), center, radius2, 2)
         x2 = center[0] + math.cos(-angle * 1.5) * radius2
         y2 = center[1] + math.sin(-angle * 1.5) * radius2
         pygame.draw.circle(surface, (255, 150, 255), (int(x2), int(y2)), 4)
-        
-        # Jemný pulzující závoj, pod kterým prosvítá projíždějící laser
-        pulse = abs(math.sin(time_ms * 0.005)) * 6
+
+        # Jemný pulzující závoj s dýcháním, pod kterým prosvítá projíždějící laser
+        breathing = self.get_breathing_pulse(cycle_time=4000, intensity=4)
+        glow_intensity = int(12 + breathing)
         glow = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
-        pygame.draw.circle(glow, (100, 0, 255, 80), (self.size//2, self.size//2), int(12 + pulse))
+        pygame.draw.circle(glow, (100, 0, 255, 80), (self.size//2, self.size//2), glow_intensity)
         surface.blit(glow, self.rect.topleft)
 
     def interact_with_beam(self, beam_dir, color):
