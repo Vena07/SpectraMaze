@@ -23,13 +23,19 @@ class UIManager:
         self.big_font = self.get_font(60)
         self.screen_w = screen_width
         self.screen_h = screen_height
-        
+
         self.moves_made = 0
         self.play_start_time = 0
         self.play_time_str = "00:00"
-        
+
         self.music_vol = 0.5
         self.sfx_vol = 0.5
+
+        # Transition system
+        self.prev_state = "MAIN_MENU"
+        self.transition_time = 0.0
+        self.transition_duration = 0.4  # 400ms transitions
+        self.transition_active = False
         
         # Načtení loga (pokud existuje)
         try:
@@ -130,6 +136,27 @@ class UIManager:
         except:
             return pygame.font.SysFont("couriernew,consolas,lucidaconsole,monospace", size, bold=True)
 
+    def ease_out(self, t):
+        """Ease-out cubic interpolation"""
+        t = min(1.0, max(0.0, t))
+        return 1 - (1 - t) ** 3
+
+    def update_transition(self, dt):
+        """Update transition state"""
+        if self.transition_active:
+            self.transition_time += dt
+            if self.transition_time >= self.transition_duration:
+                self.transition_active = False
+                self.transition_time = 0.0
+                self.prev_state = self.state
+        return self.ease_out(self.transition_time / self.transition_duration) if self.transition_active else 1.0
+
+    def trigger_transition(self):
+        """Trigger a smooth transition to new state"""
+        if self.prev_state != self.state:
+            self.transition_active = True
+            self.transition_time = 0.0
+
     def draw_neon_btn(self, surface, rect, text, color, font=None, outline_only=False, mouse_pos=None):
         if font is None: font = self.font
         is_hovered = mouse_pos and rect.collidepoint(mouse_pos)
@@ -182,15 +209,19 @@ class UIManager:
             if self.state == "MAIN_MENU":
                 if self.btn_play.collidepoint(x, y):
                     self.state = "COMMUNITY_PLAY"
+                    self.trigger_transition()
                     return {"action": "open_community_menu"}
                 elif self.btn_ai.collidepoint(x, y):
                     self.state = "AI_MENU"
+                    self.trigger_transition()
                     return {"action": "click"}
                 elif self.btn_tutorial.collidepoint(x, y):
                     self.state = "TUTORIAL_SELECT"
+                    self.trigger_transition()
                     return {"action": "click"}
                 elif self.btn_settings.collidepoint(x, y):
                     self.state = "SETTINGS"
+                    self.trigger_transition()
                     return {"action": "click"}
                 elif self.btn_exit.collidepoint(x, y):
                     return {"action": "quit"}
@@ -214,36 +245,43 @@ class UIManager:
                 # Zpět do menu
                 if 10 <= x <= 120 and 10 <= y <= 50:
                     self.state = "MAIN_MENU"
+                    self.trigger_transition()
                     return {"action": "click"}
             elif self.state == "TUTORIAL_SELECT":
                 for btn in self.tutorial_btns:
                     if btn["rect"].collidepoint(x, y):
                         self.state = "PLAY"
+                        self.trigger_transition()
                         self.current_level = btn["id"]
                         return {"action": "load_tutorial", "level": btn["id"]}
                 # Tlačítko zpět
                 if 10 <= x <= 120 and 10 <= y <= 50:
                     self.state = "MAIN_MENU"
+                    self.trigger_transition()
             elif self.state == "AI_MENU":
                 if self.btn_easy.collidepoint(x, y):
                     self.state = "PLAY"
+                    self.trigger_transition()
                     self.current_level = "AI"
                     self.last_ai_difficulty = "easy"
                     return {"action": "generate_ai", "difficulty": "easy"}
                 elif self.btn_med.collidepoint(x, y):
                     self.state = "PLAY"
+                    self.trigger_transition()
                     self.current_level = "AI"
                     self.last_ai_difficulty = "medium"
                     return {"action": "generate_ai", "difficulty": "medium"}
                 elif self.btn_hard.collidepoint(x, y):
                     self.state = "PLAY"
+                    self.trigger_transition()
                     self.current_level = "AI"
                     self.last_ai_difficulty = "hard"
                     return {"action": "generate_ai", "difficulty": "hard"}
-                
+
                 # Tlačítko zpět
                 if 10 <= x <= 120 and 10 <= y <= 50:
                     self.state = "MAIN_MENU"
+                    self.trigger_transition()
                     return {"action": "click"}
             elif self.state == "COMMUNITY_PLAY":
                 for btn in self.community_btns:
@@ -254,12 +292,14 @@ class UIManager:
                 # Tlačítko zpět
                 if 10 <= x <= 120 and 10 <= y <= 50:
                     self.state = "MAIN_MENU"
+                    self.trigger_transition()
                     return {"action": "click"}
             elif self.state == "LEVEL_PREVIEW":
                 if self.preview_start_btn.collidepoint(x, y):
                     return {"action": "start_game"}
                 if self.preview_back_btn.collidepoint(x, y):
                     self.state = "COMMUNITY_PLAY"
+                    self.trigger_transition()
                     return {"action": "open_community_menu"}
                 if self.preview_author_btn.collidepoint(x, y):
                     author = self.preview_level_info.get("author", "")
@@ -276,6 +316,7 @@ class UIManager:
                         self.state = "COMMUNITY_PLAY"
                     else:
                         self.state = "TUTORIAL_SELECT"
+                    self.trigger_transition()
                     return {"action": "click"}
                 elif 10 + back_w + 10 <= x <= 10 + back_w + 10 + 150 and 10 <= y <= 50:
                     return {"action": "reset_level"}
@@ -285,30 +326,39 @@ class UIManager:
                 if victory_center_x - 150 <= x <= victory_center_x + 150 and 400 <= y <= 460:
                     if self.current_level == "AI":
                         self.state = "PLAY"
+                        self.trigger_transition()
                         return {"action": "generate_ai", "difficulty": self.last_ai_difficulty}
                     elif str(self.current_level).startswith("COMMUNITY_"):
                         self.state = "COMMUNITY_PLAY"
+                        self.trigger_transition()
                         return {"action": "open_community_menu"}
                     else:
-                        self.state = "MAIN_MENU" 
+                        self.state = "MAIN_MENU"
+                        self.trigger_transition()
                         return {"action": "click"}
                 elif victory_center_x - 150 <= x <= victory_center_x + 150 and 500 <= y <= 560:
                     if str(self.current_level).startswith("COMMUNITY_"):
                         self.state = "COMMUNITY_PLAY"
+                        self.trigger_transition()
                         return {"action": "open_community_menu"}
                     else:
                         self.state = "AI_MENU"
+                        self.trigger_transition()
                         return {"action": "click"}
         return None
 
     def draw(self, surface):
         center_x = self.screen_w // 2
         mouse_pos = pygame.mouse.get_pos()
-        
+
         # Poloprůhledný overlay pro menu (umožní prosvítání hvězdných částic z main.py)
         if self.state in ["MAIN_MENU", "TUTORIAL_SELECT", "SETTINGS", "COMMUNITY_PLAY", "AI_MENU", "LEVEL_PREVIEW", "LOADING"]:
             overlay = pygame.Surface((self.screen_w, self.screen_h), pygame.SRCALPHA)
-            overlay.fill((10, 12, 18, 180))
+            overlay_alpha = 180
+            if self.transition_active:
+                t = self.transition_time / self.transition_duration
+                overlay_alpha = int(180 * self.ease_out(t))
+            overlay.fill((10, 12, 18, overlay_alpha))
             surface.blit(overlay, (0, 0))
 
         if self.state == "MAIN_MENU":
@@ -316,52 +366,52 @@ class UIManager:
                 logo_rect = self.logo.get_rect(center=(center_x, 120))
                 surface.blit(self.logo, logo_rect)
             else:
-                title = self.big_font.render("SpectraMaze", True, (0, 255, 200))
+                title = self.big_font.render("SpectraMaze", True, (0, 200, 220))
                 surface.blit(title, (center_x - title.get_width()//2, 120))
-            
-            self.draw_neon_btn(surface, self.btn_play, "HRÁT", (0, 255, 150), mouse_pos=mouse_pos)
-            self.draw_neon_btn(surface, self.btn_ai, "AI MAPY", (255, 100, 255), mouse_pos=mouse_pos)
-            self.draw_neon_btn(surface, self.btn_tutorial, "KNIHOVNA", (100, 200, 255), mouse_pos=mouse_pos)
-            self.draw_neon_btn(surface, self.btn_settings, "NASTAVENÍ", (180, 180, 255), mouse_pos=mouse_pos)
-            self.draw_neon_btn(surface, self.btn_exit, "UKONČIT", (255, 100, 100), mouse_pos=mouse_pos)
 
-            self.draw_neon_btn(surface, self.btn_login, "Vytvořit mapu na webu", (150, 200, 255), font=self.small_font, mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_play, "HRÁT", (0, 200, 220), mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_ai, "AI MAPY", (200, 100, 220), mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_tutorial, "KNIHOVNA", (100, 180, 240), mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_settings, "NASTAVENÍ", (180, 180, 255), mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_exit, "UKONČIT", (180, 80, 80), mouse_pos=mouse_pos)
+
+            self.draw_neon_btn(surface, self.btn_login, "Vytvořit mapu na webu", (150, 180, 240), font=self.small_font, mouse_pos=mouse_pos)
 
         elif self.state == "SETTINGS":
-            title = self.big_font.render("Nastavení", True, (0, 255, 200))
+            title = self.big_font.render("Nastavení", True, (0, 200, 220))
             surface.blit(title, (center_x - title.get_width()//2, 80))
-            
+
             # Ovládání hudby
             txt_mus = self.font.render(f"Hlasitost hudby: {int(self.music_vol * 100)}%", True, (255, 255, 255))
             surface.blit(txt_mus, (center_x - txt_mus.get_width()//2, 160))
-            
+
             # Vizuální ukazatel hlasitosti
             bar_mus = pygame.Rect(center_x - 70, 215, 140, 20)
             pygame.draw.rect(surface, (30, 35, 45), bar_mus, border_radius=10)
             if self.music_vol > 0:
                 fill_mus = pygame.Rect(center_x - 70, 215, int(140 * self.music_vol), 20)
-                pygame.draw.rect(surface, (0, 255, 150), fill_mus, border_radius=10)
+                pygame.draw.rect(surface, (0, 200, 220), fill_mus, border_radius=10)
 
-            self.draw_neon_btn(surface, self.btn_mus_down, "-", (255, 100, 100), mouse_pos=mouse_pos)
-            self.draw_neon_btn(surface, self.btn_mus_up, "+", (0, 255, 150), mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_mus_down, "-", (180, 80, 80), mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_mus_up, "+", (0, 200, 220), mouse_pos=mouse_pos)
 
             # Ovládání zvuků
             txt_sfx = self.font.render(f"Hlasitost zvuků: {int(self.sfx_vol * 100)}%", True, (255, 255, 255))
             surface.blit(txt_sfx, (center_x - txt_sfx.get_width()//2, 260))
-            
+
             bar_sfx = pygame.Rect(center_x - 70, 315, 140, 20)
             pygame.draw.rect(surface, (30, 35, 45), bar_sfx, border_radius=10)
             if self.sfx_vol > 0:
                 fill_sfx = pygame.Rect(center_x - 70, 315, int(140 * self.sfx_vol), 20)
-                pygame.draw.rect(surface, (0, 255, 150), fill_sfx, border_radius=10)
+                pygame.draw.rect(surface, (0, 200, 220), fill_sfx, border_radius=10)
 
-            self.draw_neon_btn(surface, self.btn_sfx_down, "-", (255, 100, 100), mouse_pos=mouse_pos)
-            self.draw_neon_btn(surface, self.btn_sfx_up, "+", (0, 255, 150), mouse_pos=mouse_pos)
-            
+            self.draw_neon_btn(surface, self.btn_sfx_down, "-", (180, 80, 80), mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_sfx_up, "+", (0, 200, 220), mouse_pos=mouse_pos)
+
             # Styl Laseru
             txt_style = self.font.render("Styl laseru", True, (255, 255, 255))
             surface.blit(txt_style, (center_x - txt_style.get_width()//2, 360))
-            
+
             style_rect = pygame.Rect(center_x - 70, 400, 140, 50)
             pygame.draw.rect(surface, (20, 25, 30), style_rect, border_radius=10)
             pygame.draw.rect(surface, (180, 180, 255), style_rect, 2, border_radius=10)
@@ -466,7 +516,7 @@ class UIManager:
                         pygame.draw.circle(surface, (255, 255, 255), (int(px), int(py)), 3)
             # ----------------------------------------------
             
-            self.draw_neon_btn(surface, pygame.Rect(10, 10, 110, 40), "Zpět", (255, 100, 100), font=self.small_font, mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, pygame.Rect(10, 10, 110, 40), "Zpět", (180, 80, 80), font=self.small_font, mouse_pos=mouse_pos)
 
         elif self.state == "TUTORIAL_SELECT":
             title = self.big_font.render("Knihovna bloků", True, (255, 255, 255))
@@ -495,17 +545,17 @@ class UIManager:
                 txt_surf = self.small_font.render(btn["label"], True, (100, 200, 255))
                 surface.blit(txt_surf, (btn["rect"].x + 70, btn["rect"].centery - txt_surf.get_height()//2))
                 
-            self.draw_neon_btn(surface, pygame.Rect(10, 10, 110, 40), "Zpět", (255, 100, 100), font=self.small_font, mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, pygame.Rect(10, 10, 110, 40), "Zpět", (180, 80, 80), font=self.small_font, mouse_pos=mouse_pos)
 
         elif self.state == "AI_MENU":
             title = self.big_font.render("Generátor AI map", True, (255, 255, 255))
             surface.blit(title, (center_x - title.get_width()//2, 100))
-            
-            self.draw_neon_btn(surface, self.btn_easy, "LEHKÁ", (0, 255, 150), mouse_pos=mouse_pos)
-            self.draw_neon_btn(surface, self.btn_med, "STŘEDNÍ", (255, 200, 50), mouse_pos=mouse_pos)
-            self.draw_neon_btn(surface, self.btn_hard, "TĚŽKÁ", (255, 50, 50), mouse_pos=mouse_pos)
-            
-            self.draw_neon_btn(surface, pygame.Rect(10, 10, 110, 40), "Zpět", (255, 100, 100), font=self.small_font, mouse_pos=mouse_pos)
+
+            self.draw_neon_btn(surface, self.btn_easy, "LEHKÁ", (0, 200, 220), mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_med, "STŘEDNÍ", (200, 180, 100), mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, self.btn_hard, "TĚŽKÁ", (180, 80, 80), mouse_pos=mouse_pos)
+
+            self.draw_neon_btn(surface, pygame.Rect(10, 10, 110, 40), "Zpět", (180, 80, 80), font=self.small_font, mouse_pos=mouse_pos)
 
         elif self.state == "COMMUNITY_PLAY":
             title = self.big_font.render("Komunitní mapy", True, (255, 255, 255))
@@ -541,7 +591,7 @@ class UIManager:
                     pygame.draw.rect(surface, (30, 30, 40), (self.screen_w - 25, scrollbar_y, 15, scrollbar_h), border_radius=8)
                     pygame.draw.rect(surface, (100, 150, 200), (self.screen_w - 25, handle_y, 15, handle_h), border_radius=8)
 
-            self.draw_neon_btn(surface, pygame.Rect(10, 10, 110, 40), "Zpět", (255, 100, 100), font=self.small_font, mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, pygame.Rect(10, 10, 110, 40), "Zpět", (180, 80, 80), font=self.small_font, mouse_pos=mouse_pos)
 
         elif self.state == "LOADING":
             title = self.big_font.render("Načítání...", True, (255, 255, 255))
@@ -613,8 +663,8 @@ class UIManager:
         elif self.state == "PLAY":
             back_txt = "Komunita" if str(self.current_level).startswith("COMMUNITY_") else ("AI Menu" if self.current_level == "AI" else "Knihovna")
             back_w = max(110, self.small_font.size(back_txt)[0] + 20)
-            self.draw_neon_btn(surface, pygame.Rect(10, 10, back_w, 40), back_txt, (255, 100, 100), font=self.small_font, mouse_pos=mouse_pos)
-            self.draw_neon_btn(surface, pygame.Rect(10 + back_w + 10, 10, 150, 40), "RESTARTOVAT", (255, 200, 100), font=self.small_font, mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, pygame.Rect(10, 10, back_w, 40), back_txt, (180, 80, 80), font=self.small_font, mouse_pos=mouse_pos)
+            self.draw_neon_btn(surface, pygame.Rect(10 + back_w + 10, 10, 150, 40), "RESTARTOVAT", (200, 180, 100), font=self.small_font, mouse_pos=mouse_pos)
                     
         elif self.state == "VICTORY":
             victory_w, victory_h = 400, 400

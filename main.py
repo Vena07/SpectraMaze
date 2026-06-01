@@ -438,7 +438,7 @@ def main():
             is_tutorial = not str(ui_manager.current_level).startswith("COMMUNITY_") and ui_manager.current_level != "AI"
             if is_tutorial and ui_manager.current_level in level_manager.block_tutorials:
                 tut_data = level_manager.block_tutorials[ui_manager.current_level]
-                title_surf = ui_manager.big_font.render(tut_data["title"], True, (0, 255, 200))
+                title_surf = ui_manager.big_font.render(tut_data["title"], True, (0, 200, 220))
                 screen.blit(title_surf, (screen_w // 2 - title_surf.get_width()//2, 10))
                 
                 # Automatické zalamování dlouhého textu
@@ -465,7 +465,7 @@ def main():
                 
                 hud_rect = pygame.Rect(screen_w // 2 - 150, 15, 300, 45)
                 pygame.draw.rect(screen, (20, 25, 30), hud_rect, border_radius=12)
-                pygame.draw.rect(screen, (0, 255, 200), hud_rect, 2, border_radius=12)
+                pygame.draw.rect(screen, (0, 200, 220), hud_rect, 2, border_radius=12)
                 t_img = ui_manager.small_font.render(f"Čas: {ui_manager.play_time_str}", True, (200, 255, 255))
                 m_img = ui_manager.small_font.render(f"Tahy: {ui_manager.moves_made}", True, (200, 255, 255))
                 screen.blit(t_img, (hud_rect.left + 20, hud_rect.centery - t_img.get_height()//2))
@@ -491,8 +491,8 @@ def main():
                 pygame.draw.rect(screen, (20, 25, 30), (0, screen_h - 55, screen_w, 55))
                 pygame.draw.line(screen, (50, 60, 80), (0, screen_h - 55), (screen_w, screen_h - 55), 2) # Tech hrana
                 
-                btn_color = (0, 255, 150) if not engine.show_lasers else (255, 100, 100)
-                if engine.is_exploded: btn_color = (255, 150, 0) # Výstražná oranžová
+                btn_color = (0, 200, 220) if not engine.show_lasers else (180, 80, 80)
+                if engine.is_exploded: btn_color = (200, 180, 100)  # Výstražná zlatá
                 
                 btn_rect = pygame.Rect(screen_w // 2 - 125, screen_h - 48, 250, 40)
                 is_btn_hovered = btn_rect.collidepoint(mouse_pos)
@@ -519,6 +519,10 @@ def main():
                     level_text = "Level: AI Vygenerováno" if ui_manager.current_level == "AI" else "Režim pískoviště"
                 level_img = level_font.render(level_text, True, (220, 220, 220))
                 screen.blit(level_img, (20, screen_h - 55 + (55 - level_img.get_height()) // 2))
+
+        # Update transitions before drawing
+        dt = clock.get_time() / 1000.0  # Delta time in seconds since last frame
+        ui_manager.update_transition(dt)
 
         ui_manager.draw(screen)
 

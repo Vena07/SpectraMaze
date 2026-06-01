@@ -213,7 +213,7 @@ class LaserEngine:
                             vx = random.uniform(-8, 8)
                             vy = random.uniform(-8, 8)
                             life = random.randint(20, 60)
-                            color = random.choice([(255, 50, 0), (255, 150, 0), (255, 255, 0), (255, 255, 255)])
+                            color = random.choice([(200, 80, 0), (220, 120, 0), (200, 150, 50), (200, 200, 100)])  # Softnější explosion barvy
                             self.particles.append([self.explosion_pos[0], self.explosion_pos[1], vx, vy, life, color])
                         self.explosion_particles_generated = True
                         
@@ -225,8 +225,8 @@ class LaserEngine:
         if not self.show_lasers: return
 
         time_ms = pygame.time.get_ticks()
-        pulse = (math.sin(time_ms / 100.0) + 1) / 2.0 # Rychlejší a agresivnější pulzování
-        
+        pulse = (math.sin(time_ms / 150.0) + 1) / 2.0  # Pomalejší, elegantnější pulzování (z 100 na 150)
+
         # 1. Krok: Výpočet aktuálních pozic všech segmentů (kvůli animaci)
         active_segments = []
         for start, end, color, dist in self.beams:
@@ -237,45 +237,45 @@ class LaserEngine:
             else:
                 cur_end = end
             active_segments.append((start, cur_end, color))
-            
+
         # 2. Krok: Vykreslení ve vrstvách (Painter's algorithm)
         # Nejdřív stíny, pak záře, nakonec bílé středy. Tím se celý paprsek vizuálně spojí.
-        glow_w = int(pulse * 6)
+        glow_w = int(pulse * 4)  # Zmenšit z 6 na 4 pro softnější look
 
         for layer_idx in range(5):
             for start, cur_end, color in active_segments:
                 r, g, b_col = color
                 width = 0
                 l_color = (0, 0, 0)
-                
+
                 if self.laser_style == "Plasma":
                     wobble = int((math.sin(time_ms / 40.0) + 1) * 4)
-                    if layer_idx == 0: width, l_color = 18, (10, 12, 18)
-                    elif layer_idx == 1: width, l_color = 14 + wobble, (int(r*0.3), int(g*0.3), int(b_col*0.3))
-                    elif layer_idx == 2: width, l_color = 10 + wobble//2, (int(r*0.7), int(g*0.7), int(b_col*0.7))
-                    elif layer_idx == 3: width, l_color = 6, color
-                    elif layer_idx == 4: width, l_color = 3, (min(255, r+100), min(255, g+100), min(255, b_col+100))
+                    if layer_idx == 0: width, l_color = 16, (10, 12, 18)  # Zmenšit ze 18 na 16
+                    elif layer_idx == 1: width, l_color = 12 + wobble, (int(r*0.25), int(g*0.25), int(b_col*0.25))  # Sníž z 0.3 na 0.25
+                    elif layer_idx == 2: width, l_color = 9 + wobble//2, (int(r*0.6), int(g*0.6), int(b_col*0.6))  # Sníž z 10 na 9
+                    elif layer_idx == 3: width, l_color = 5, color  # Sníž ze 6 na 5
+                    elif layer_idx == 4: width, l_color = 2, (min(255, r+80), min(255, g+80), min(255, b_col+80))  # Sníž highlight
                 elif self.laser_style == "Focused":
-                    if layer_idx == 0: width, l_color = 10, (10, 12, 18)
-                    elif layer_idx == 1: width, l_color = 6, (int(r*0.4), int(g*0.4), int(b_col*0.4))
-                    elif layer_idx == 2: width, l_color = 3, color
-                    elif layer_idx == 3: width, l_color = 1, (255, 255, 255)
+                    if layer_idx == 0: width, l_color = 9, (10, 12, 18)  # Zmenšit z 10
+                    elif layer_idx == 1: width, l_color = 5, (int(r*0.35), int(g*0.35), int(b_col*0.35))  # Sníž z 6, 0.4
+                    elif layer_idx == 2: width, l_color = 2, color  # Sníž ze 3
+                    elif layer_idx == 3: width, l_color = 1, (200, 200, 200)  # Sníž highlight z 255
                 elif self.laser_style == "Helix":
-                    if layer_idx == 0: width, l_color = 12, (10, 12, 18)
-                    elif layer_idx == 1: width, l_color = 8 + glow_w//2, (int(r*0.3), int(g*0.3), int(b_col*0.3))
-                    elif layer_idx == 2: width, l_color = 4, color
+                    if layer_idx == 0: width, l_color = 11, (10, 12, 18)  # Zmenšit z 12
+                    elif layer_idx == 1: width, l_color = 7 + glow_w//2, (int(r*0.25), int(g*0.25), int(b_col*0.25))  # Sníž z 8, 0.3
+                    elif layer_idx == 2: width, l_color = 3, color  # Sníž ze 4
                 elif self.laser_style == "Quantum":
-                    if layer_idx == 0: width, l_color = 14, (10, 12, 18)
-                    elif layer_idx == 1: width, l_color = 10 + glow_w, (int(r*0.2), int(g*0.2), int(b_col*0.2))
-                    elif layer_idx == 2: width, l_color = 6, color
-                    elif layer_idx == 3: width, l_color = 2, (255, 255, 255)
-                else: # Neon
-                    if layer_idx == 0: width, l_color = 16, (10, 12, 18)
-                    elif layer_idx == 1: width, l_color = 12 + glow_w, (int(r*0.2), int(g*0.2), int(b_col*0.2))
-                    elif layer_idx == 2: width, l_color = 8 + glow_w//2, (int(r*0.6), int(g*0.6), int(b_col*0.6))
-                    elif layer_idx == 3: width, l_color = 4, color
-                    elif layer_idx == 4: width, l_color = 2, (255, 255, 255)
-                    
+                    if layer_idx == 0: width, l_color = 12, (10, 12, 18)  # Zmenšit ze 14
+                    elif layer_idx == 1: width, l_color = 8 + glow_w, (int(r*0.18), int(g*0.18), int(b_col*0.18))  # Sníž z 10, 0.2
+                    elif layer_idx == 2: width, l_color = 5, color  # Sníž ze 6
+                    elif layer_idx == 3: width, l_color = 1, (200, 200, 200)  # Sníž highlight
+                else: # Neon - elegantní verze
+                    if layer_idx == 0: width, l_color = 14, (10, 12, 18)  # Zmenšit z 16
+                    elif layer_idx == 1: width, l_color = 10 + glow_w, (int(r*0.18), int(g*0.18), int(b_col*0.18))  # Sníž z 12, 0.2
+                    elif layer_idx == 2: width, l_color = 6 + glow_w//2, (int(r*0.5), int(g*0.5), int(b_col*0.5))  # Sníž z 8, 0.6
+                    elif layer_idx == 3: width, l_color = 3, color  # Sníž ze 4
+                    elif layer_idx == 4: width, l_color = 1, (200, 200, 200)  # Sníž highlight z 255, zmenšit z 2
+
                 if width > 0:
                     pygame.draw.line(surface, l_color, start, cur_end, width)
                     radius = width // 2
@@ -342,11 +342,11 @@ class LaserEngine:
 
         if self.is_exploded and self.explosion_pos:
             if self.anim_frame >= self.explosion_dist:
-                # Zlepšený masivní efekt exploze s vrstvami
-                pygame.draw.circle(surface, (255, 50, 0), self.explosion_pos, int(50 + pulse * 30), 8)
-                pygame.draw.circle(surface, (255, 100, 0), self.explosion_pos, int(30 + pulse * 15), 4)
-                pygame.draw.circle(surface, (255, 255, 255), self.explosion_pos, int(10 + pulse * 5))
-                pygame.draw.circle(surface, (255, 0, 0), self.explosion_pos, 80, 2)
+                # Zlepšený softnější efekt exploze s vrstvami
+                pygame.draw.circle(surface, (200, 80, 0), self.explosion_pos, int(45 + pulse * 25), 8)  # Softnější barva
+                pygame.draw.circle(surface, (220, 120, 0), self.explosion_pos, int(28 + pulse * 12), 4)
+                pygame.draw.circle(surface, (200, 180, 100), self.explosion_pos, int(8 + pulse * 4))  # Softnější highlight
+                pygame.draw.circle(surface, (180, 80, 0), self.explosion_pos, 75, 2)  # Softnější border
 
     def is_victory(self, blocks):
         bulbs = [b for b in blocks if type(b).__name__ == "Bulb"]
